@@ -69,6 +69,7 @@ int KeyboardBLE_::send(void) {
     report[0] = __BLEGetKeyboardReportID();
     memcpy(&report[1], (uint8_t*)&data, sizeof(hid_keyboard_report_t));
     if (PicoBluetoothBLEHID.send(&report, sizeof(hid_keyboard_report_t) +1)) {
+        delay(10);
         return 1;
     }
     return 0;
