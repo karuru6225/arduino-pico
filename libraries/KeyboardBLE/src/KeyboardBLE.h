@@ -20,21 +20,19 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef KEYBOARDBLE_h
-#define KEYBOARDBLE_h
+#pragma once
 
 #include <HID_Keyboard.h>
 
 class KeyboardBLE_ : public HID_Keyboard {
 private:
-    virtual void sendReport(KeyReport* keys) override;
-    virtual void sendConsumerReport(uint16_t key) override;
+    virtual int send(void) override;
+    // virtual void sendReport(KeyReport* keys) override;
+    // virtual void sendConsumerReport(uint16_t key) override;
 public:
     KeyboardBLE_(void);
-    void begin(const char *localName = nullptr, const char *hidName = nullptr, const uint8_t *layout = KeyboardLayout_en_US);
+    void begin(const char *localName = nullptr, const char *hidName = nullptr);
     void end(void);
     void setBattery(int lvl);
 };
 extern KeyboardBLE_ KeyboardBLE;
-
-#endif

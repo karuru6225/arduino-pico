@@ -21,7 +21,6 @@
 */
 
 #include "KeyboardBLE.h"
-#include "KeyboardLayout.h"
 #include <HID_Bluetooth.h>
 #include <PicoBluetoothBLEHID.h>
 
@@ -39,15 +38,13 @@ KeyboardBLE_::KeyboardBLE_(void) {
 uint8_t *desc_keyboardBLE;
 uint16_t desc_keyboardBLE_length;
 
-void KeyboardBLE_::begin(const char *localName, const char *hidName, const uint8_t *layout) {
+void KeyboardBLE_::begin(const char *localName, const char *hidName) {
     if (!localName) {
         localName = "PicoW BLE Keyboard";
     }
     if (!hidName) {
         hidName = localName;
     }
-    _asciimap = layout;
-
     __SetupHIDreportmap(__BLEInstallMouse, __BLEInstallKeyboard, __BLEInstallJoystick, false, &desc_keyboardBLE_length, &desc_keyboardBLE);
 
     PicoBluetoothBLEHID.startHID(localName, hidName, __BLEGetAppearance(), desc_keyboardBLE, desc_keyboardBLE_length);
@@ -61,26 +58,29 @@ void KeyboardBLE_::setBattery(int lvl) {
     PicoBluetoothBLEHID.setBattery(lvl);
 }
 
-void KeyboardBLE_::sendReport(KeyReport* keys) {
+int KeyboardBLE_::send(void) {
+    Serial.println("KeyboardBLE_::send");
     hid_keyboard_report_t data;
-    data.modifier = keys->modifiers;
+    data.modifier = _keyReport.modifiers;
     data.reserved = 0;
-    memcpy(data.keycode, keys->keys, sizeof(data.keycode));
+    memcpy(data.keycode, _keyReport.keys, sizeof(data.keycode));
 
-    //stitch in report id
     static uint8_t report[sizeof(hid_keyboard_report_t) +1];
     report[0] = __BLEGetKeyboardReportID();
     memcpy(&report[1], (uint8_t*)&data, sizeof(hid_keyboard_report_t));
-    PicoBluetoothBLEHID.send(&report, sizeof(hid_keyboard_report_t) +1);
+    if (PicoBluetoothBLEHID.send(&report, sizeof(hid_keyboard_report_t) +1)) {
+        return 1;
+    }
+    return 0;
 }
 
-void KeyboardBLE_::sendConsumerReport(uint16_t key) {
-    uint8_t report[3];
+// void KeyboardBLE_::sendConsumerReport(uint16_t key) {
+//     uint8_t report[3];
 
-    report[0] = __BLEGetKeyboardReportID() + 1; //consumer report id
-    report[1] = key & 0xFF;
-    report[2] = (key >> 8) & 0xFF;
-    PicoBluetoothBLEHID.send(&report, 3);
-}
+//     report[0] = __BLEGetKeyboardReportID() + 1; //consumer report id
+//     report[1] = key & 0xFF;
+//     report[2] = (key >> 8) & 0xFF;
+//     PicoBluetoothBLEHID.send(&report, 3);
+// }
 
 KeyboardBLE_ KeyboardBLE;
